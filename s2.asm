@@ -92059,33 +92059,33 @@ Snd_Driver_End:
 ; loc_ED100:
 SndDAC_Start:
 
-SndDAC_Sample1:
-	BINCLUDE	"sound/DAC/Sample 1.bin"
-SndDAC_Sample1_End
+SndDAC_Kick:
+	BINCLUDE	"sound/DAC/81 - Kick.bin"
+SndDAC_Kick_End
 
-SndDAC_Sample2:
-	BINCLUDE	"sound/DAC/Sample 2.bin"
-SndDAC_Sample2_End
+SndDAC_Snare:
+	BINCLUDE	"sound/DAC/82 - Snare.bin"
+SndDAC_Snare_End
 
-SndDAC_Sample5:
-	BINCLUDE	"sound/DAC/Sample 5.bin"
-SndDAC_Sample5_End
+SndDAC_Timpani:
+	BINCLUDE	"sound/DAC/85 - Timpani.bin"
+SndDAC_Timpani_End
 
-SndDAC_Sample6:
-	BINCLUDE	"sound/DAC/Sample 6.bin"
-SndDAC_Sample6_End
+SndDAC_Toms:
+	BINCLUDE	"sound/DAC/86 - Toms.bin"
+SndDAC_Toms_End
 
-SndDAC_Sample3:
-	BINCLUDE	"sound/DAC/Sample 3.bin"
-SndDAC_Sample3_End
+SndDAC_Clap:
+	BINCLUDE	"sound/DAC/83 - Clap.bin"
+SndDAC_Clap_End
 
-SndDAC_Sample4:
-	BINCLUDE	"sound/DAC/Sample 4.bin"
-SndDAC_Sample4_End
+SndDAC_Scratch:
+	BINCLUDE	"sound/DAC/84 - Scratch.bin"
+SndDAC_Scratch_End
 
-SndDAC_Sample7:
-	BINCLUDE	"sound/DAC/Sample 7.bin"
-SndDAC_Sample7_End
+SndDAC_Bongos:
+	BINCLUDE	"sound/DAC/87 - Bongos.bin"
+SndDAC_Bongos_End
 
 SndDAC_End
 
