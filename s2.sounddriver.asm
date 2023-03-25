@@ -5,8 +5,8 @@
 ; RAS' work merged into SVN by Flamewing
 ; ---------------------------------------------------------------------------
 
-FixDriverBugs = 0
-OptimiseDriver = 0
+FixDriverBugs = 1
+OptimiseDriver = 1
 
 ; ---------------------------------------------------------------------------
 ; NOTES:
@@ -3793,7 +3793,7 @@ offset :=	zDACPtrTbl
 ptrsize :=	2+2
 idstart :=	81h
 
-	db	id(zDACPtr_Kick),17h		; 81h
+	db	id(zDACPtr_Kick),1		; 81h
 	db	id(zDACPtr_Snare),1		; 82h
 	db	id(zDACPtr_Clap),6		; 83h
 	db	id(zDACPtr_Scratch),8		; 84h
