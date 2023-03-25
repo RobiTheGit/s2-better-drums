@@ -3800,7 +3800,7 @@ ptrsize :=	2+2
 idstart :=	81h
 
 	db	id(zDACPtr_Kick),2		; 81h
-	db	id(zDACPtr_Snare),1		; 82h
+	db	id(zDACPtr_Snare),2		; 82h
 	db	id(zDACPtr_Clap),6		; 83h
 	db	id(zDACPtr_Scratch),8		; 84h
 	db	id(zDACPtr_Timpani),1Bh		; 85h
