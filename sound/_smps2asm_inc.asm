@@ -81,7 +81,8 @@ nMaxPSG2			EQU nB6
 		case 2
 			enum		dKick=$81,dSnare,dClap,dScratch,dTimpani,dHiTom,dVLowClap,dHiTimpani,dMidTimpani
 			nextenum	dLowTimpani,dVLowTimpani,dMidTom,dLowTom,dFloorTom,dHiClap
-			nextenum	dMidClap,dLowClap
+			nextenum	dMidClap,dLowClap,dCrashCymbal,dRideCymbal
+			
 		case 3
 			enum		dSnareS3=$81,dHighTom,dMidTomS3,dLowTomS3,dFloorTomS3,dKickS3,dMuffledSnare
 			nextenum	dCrashCymbal,dRideCymbal,dLowMetalHit,dMetalHit,dHighMetalHit
