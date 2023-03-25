@@ -3779,6 +3779,12 @@ zDACPtr_Toms:	dw	zmake68kPtr(SndDAC_Toms)
 
 zDACPtr_Bongos:	dw	zmake68kPtr(SndDAC_Bongos)
 			dw	SndDAC_Bongos_End-SndDAC_Bongos
+			
+zDACPtr_Crash:	dw	zmake68kPtr(SndDAC_Crash)
+			dw	SndDAC_Crash_End-SndDAC_Crash
+			
+zDACPtr_Ride:	dw	zmake68kPtr(SndDAC_Ride)
+			dw	SndDAC_Ride_End-SndDAC_Ride
 
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples. The number that
@@ -3810,7 +3816,8 @@ idstart :=	81h
 	db	id(zDACPtr_Bongos),8		; 8Fh
 	db	id(zDACPtr_Bongos),0Bh		; 90h
 	db	id(zDACPtr_Bongos),12h		; 91h
-
+	db	id(zDACPtr_Crash),0Fh		; 92h
+	db	id(zDACPtr_Ride),0Fh		; 92h
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; zsub_1271

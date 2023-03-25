@@ -92087,6 +92087,14 @@ SndDAC_Bongos:
 	BINCLUDE	"sound/DAC/87 - Bongos.bin"
 SndDAC_Bongos_End
 
+SndDAC_Crash:
+	BINCLUDE	"sound/DAC/92 - Crash.bin"
+SndDAC_Crash_End
+
+SndDAC_Ride:
+	BINCLUDE	"sound/DAC/93 - Ride.bin"
+SndDAC_Ride_End
+
 SndDAC_End
 
 	if SndDAC_End - SndDAC_Start > $FFFF
