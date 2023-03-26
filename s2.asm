@@ -28331,18 +28331,14 @@ Obj3A_MapUnc_14CBC:	offsetTable
 	offsetTableEntry.w word_14E8C
 	offsetTableEntry.w word_14E96
 word_14CDA:	dc.w 8
-	dc.w $0005, $8580, $82C0, $FFA4 ; E 
-	dc.w $0009, $85DE, $82EF, $FFB4 ; M 
-	dc.w $0005, $8580, $82C0, $FFCC ; E 
-	dc.w $0005, $85E4, $82F2, $FFDC ; R 
-	dc.w $0005, $85EA, $82F5, $FFEC ; A 
-	dc.w $0005, $85EE, $82F7, $0004 ; L 
-	dc.w $0005, $85F2, $82F9, $001C ; D 
-
-	dc.w $0005, $85F6, $82FB, $004E ; H 
-	dc.w $0001, $85FA, $82FD, $0066 ; I 
-	dc.w $0005, $85EE, $82F7 ,$007E ; L 
-	dc.w $0005, $85EE, $82F7 ,$0096 ; L 
+	dc.w 5,	$85D0, $82E8, $FFC0
+	dc.w 5,	$8588, $82C4, $FFD0
+	dc.w 5,	$8584, $82C2, $FFE0
+	dc.w 1,	$85C0, $82E0, $FFF0
+	dc.w 5,	$85B4, $82DA, $FFF8
+	dc.w 5,	$85B8, $82DC, $10
+	dc.w 5,	$8588, $82C4, $20
+	dc.w 5,	$85D4, $82EA, $2F
 
 word_14D1C:	dc.w 8
 	dc.w 9,	$85C6, $82E3, $FFBC
