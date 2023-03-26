@@ -506,7 +506,7 @@ zUpdateDAC:
 	add	a,a			; a *= 4 (each DAC entry is a pointer and length, 2+2)
 	add	a,zDACPtrTbl&0FFh	; Get low byte into table -> 'a'
 	ld	(zDACStartAddress+1),a	; Store into the instruction after zDACStartAddress (self-modifying code)
-	add	a,zDACLenTbl-zDACPtrTbl	; How to offset to length versus pointer
+	add	a,zDACPtrTbl_End-zDACPtrTbl	; How to offset to length versus pointer
 	ld	(zDACStoreLength+2),a	; Store into the instruction after zDACStoreLength (self-modifying code)
 	pop	af
 	ld	hl,zWriteToDAC
@@ -518,7 +518,7 @@ zDACStartAddress:
 
 ; zloc_107
 zDACStoreLength:
-	ld	de,(zDACLenTbl)		; Self-modified code: sets length of DAC sample for zWriteToDAC
+	ld	de,(zDACPtrTbl_End-zDACPtrTbl)		; Self-modified code: sets length of DAC sample for zWriteToDAC
 
 ;zloc_10B
 zDACStoreDelay:
@@ -3754,12 +3754,13 @@ zSpedUpTempoTable:
 
 	; DAC sample pointers and lengths
 	ensure1byteoffset 1Ch
-
+	
 ; zDACPtr_Index zbyte_1233
 zDACPtrTbl:
+
 zDACPtr_Kick:	dw	zmake68kPtr(SndDAC_Kick)
+
 ; zbyte_1235
-zDACLenTbl:
 			dw	SndDAC_Kick_End-SndDAC_Kick
 
 zDACPtr_Snare:	dw	zmake68kPtr(SndDAC_Snare)
@@ -3785,6 +3786,10 @@ zDACPtr_Crash:	dw	zmake68kPtr(SndDAC_Crash)
 			
 zDACPtr_Ride:	dw	zmake68kPtr(SndDAC_Ride)
 			dw	SndDAC_Ride_End-SndDAC_Ride
+zDACPtrTbl_End
+			
+;__LABEL__	dw	zmake68kPtr(SAMPLE)
+;		dw	SAMPLE_End-SAMPLE
 
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples. The number that
