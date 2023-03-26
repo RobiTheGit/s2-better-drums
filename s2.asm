@@ -92064,19 +92064,19 @@ Snd_Driver_End:
 ; loc_ED100:
 DAC macro {INTLABEL},path
 __LABEL__ label *
-	BINCLUDE "sound/DAC/path"
+	BINCLUDE "sound/DAC/path.bin"
 __LABEL___End label *
 	endm
 SndDAC_Start:
-SndDAC_Kick:	DAC 81 - Kick.bin
-SndDAC_Snare:	DAC 82 - Snare.bin
-SndDAC_Timpani:	DAC 85 - Timpani.bin
-SndDAC_Toms:	DAC 86 - Toms.bin
-SndDAC_Clap:	DAC 83 - Clap.bin
-SndDAC_Scratch:	DAC 84 - Scratch.bin
-SndDAC_Bongos:	DAC 87 - Bongos.bin
-SndDAC_Crash:	DAC 92 - Crash.bin
-SndDAC_Ride:	DAC 93 - Ride.bin
+SndDAC_Kick:	DAC 81 - Kick
+SndDAC_Snare:	DAC 82 - Snare
+SndDAC_Timpani:	DAC 85 - Timpani
+SndDAC_Toms:	DAC 86 - Toms
+SndDAC_Clap:	DAC 83 - Clap
+SndDAC_Scratch:	DAC 84 - Scratch
+SndDAC_Bongos:	DAC 87 - Bongos
+SndDAC_Crash:	DAC 92 - Crash
+SndDAC_Ride:	DAC 93 - Ride
 SndDAC_End
 
 	if SndDAC_End - SndDAC_Start > $FFFF
