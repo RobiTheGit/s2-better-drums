@@ -28331,14 +28331,19 @@ Obj3A_MapUnc_14CBC:	offsetTable
 	offsetTableEntry.w word_14E8C
 	offsetTableEntry.w word_14E96
 word_14CDA:	dc.w 8
-	dc.w 5,	$85D0, $82E8, $FFC0
-	dc.w 5,	$8588, $82C4, $FFD0
-	dc.w 5,	$8584, $82C2, $FFE0
-	dc.w 1,	$85C0, $82E0, $FFF0
-	dc.w 5,	$85B4, $82DA, $FFF8
-	dc.w 5,	$85B8, $82DC, $10
-	dc.w 5,	$8588, $82C4, $20
-	dc.w 5,	$85D4, $82EA, $2F
+	dc.w $0005, $8580, $82C0, $FFA4 ; E 
+	dc.w $0009, $85DE, $82EF, $FFB4 ; M 
+	dc.w $0005, $8580, $82C0, $FFCC ; E 
+	dc.w $0005, $85E4, $82F2, $FFDC ; R 
+	dc.w $0005, $85EA, $82F5, $FFEC ; A 
+	dc.w $0005, $85EE, $82F7, $0004 ; L 
+	dc.w $0005, $85F2, $82F9, $001C ; D 
+
+	dc.w $0005, $85F6, $82FB, $004E ; H 
+	dc.w $0001, $85FA, $82FD, $0066 ; I 
+	dc.w $0005, $85EE, $82F7 ,$007E ; L 
+	dc.w $0005, $85EE, $82F7 ,$0096 ; L 
+
 word_14D1C:	dc.w 8
 	dc.w 9,	$85C6, $82E3, $FFBC
 	dc.w 1,	$85C0, $82E0, $FFD4
@@ -92057,44 +92062,21 @@ Snd_Driver_End:
 ; DAC samples
 ; ---------------------------------------------------------------------------
 ; loc_ED100:
+DAC macro {INTLABEL},path
+__LABEL__ label *
+	BINCLUDE "sound/DAC/path"
+__LABEL___End label *
+	endm
 SndDAC_Start:
-
-SndDAC_Kick:
-	BINCLUDE	"sound/DAC/81 - Kick.bin"
-SndDAC_Kick_End
-
-SndDAC_Snare:
-	BINCLUDE	"sound/DAC/82 - Snare.bin"
-SndDAC_Snare_End
-
-SndDAC_Timpani:
-	BINCLUDE	"sound/DAC/85 - Timpani.bin"
-SndDAC_Timpani_End
-
-SndDAC_Toms:
-	BINCLUDE	"sound/DAC/86 - Toms.bin"
-SndDAC_Toms_End
-
-SndDAC_Clap:
-	BINCLUDE	"sound/DAC/83 - Clap.bin"
-SndDAC_Clap_End
-
-SndDAC_Scratch:
-	BINCLUDE	"sound/DAC/84 - Scratch.bin"
-SndDAC_Scratch_End
-
-SndDAC_Bongos:
-	BINCLUDE	"sound/DAC/87 - Bongos.bin"
-SndDAC_Bongos_End
-
-SndDAC_Crash:
-	BINCLUDE	"sound/DAC/92 - Crash.bin"
-SndDAC_Crash_End
-
-SndDAC_Ride:
-	BINCLUDE	"sound/DAC/93 - Ride.bin"
-SndDAC_Ride_End
-
+SndDAC_Kick:	DAC 81 - Kick.bin
+SndDAC_Snare:	DAC 82 - Snare.bin
+SndDAC_Timpani:	DAC 85 - Timpani.bin
+SndDAC_Toms:	DAC 86 - Toms.bin
+SndDAC_Clap:	DAC 83 - Clap.bin
+SndDAC_Scratch:	DAC 84 - Scratch.bin
+SndDAC_Bongos:	DAC 87 - Bongos.bin
+SndDAC_Crash:	DAC 92 - Crash.bin
+SndDAC_Ride:	DAC 93 - Ride.bin
 SndDAC_End
 
 	if SndDAC_End - SndDAC_Start > $FFFF
