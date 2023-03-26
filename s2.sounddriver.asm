@@ -3754,7 +3754,6 @@ zSpedUpTempoTable:
 
 	; DAC sample pointers and lengths
 	ensure1byteoffset 1Ch
-	
 ; zDACPtr_Index zbyte_1233
 zDACPtrTbl:
 zDACPtr_Kick:	dw	zmake68kPtr(SndDAC_Kick)
@@ -3798,8 +3797,8 @@ offset :=	zDACPtrTbl
 ptrsize :=	2+2
 idstart :=	81h
 
-	db	id(zDACPtr_Kick),2		; 81h
-	db	id(zDACPtr_Snare),2		; 82h
+	db	id(zDACPtr_Kick),0Bh		; 81h
+	db	id(zDACPtr_Snare),8		; 82h
 	db	id(zDACPtr_Clap),6		; 83h
 	db	id(zDACPtr_Scratch),8		; 84h
 	db	id(zDACPtr_Timpani),1Bh		; 85h
