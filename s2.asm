@@ -92067,7 +92067,9 @@ __LABEL__ label *
 	BINCLUDE "sound/DAC/path.bin"
 __LABEL___End label *
 	endm
-SndDAC_Start:
+	
+      
+SndDAC_Start: 
 SndDAC_Kick:	DAC 81 - Kick
 SndDAC_Snare:	DAC 82 - Snare
 SndDAC_Timpani:	DAC 85 - Timpani
@@ -92078,13 +92080,8 @@ SndDAC_Bongos:	DAC 87 - Bongos
 SndDAC_Crash:	DAC 92 - Crash
 SndDAC_Ride:	DAC 93 - Ride
 SndDAC_End
+	DACFinish
 
-	if SndDAC_End - SndDAC_Start > $FFFF
-		fatal "DAC samples must fit within $FFFF bytes, but you have $\{SndDAC_End-SndDAC_Start } bytes of DAC samples."
-	endif
-	if SndDAC_End - SndDAC_Start > Size_of_DAC_samples
-		fatal "Size_of_DAC_samples = $\{Size_of_DAC_samples}, but you have $\{SndDAC_End-SndDAC_Start} bytes of DAC samples."
-	endif
 
 ; ---------------------------------------------------------------------------
 ; Music pointers
