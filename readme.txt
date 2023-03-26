@@ -8,4 +8,4 @@ Commercial usage is expressly prohibited. Sonic Retro claims no ownership of any
 You assume any and all responsibility for using this content responsibly. Sonic Retro claims no responsibiliy or warranty.
 
 TODO:
-fix drum samples
+fix EOA results screen
