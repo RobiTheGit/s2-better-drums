@@ -113,8 +113,8 @@ soundBankName := "__LABEL__"
 
 DebugSoundbanks := 0
 DACFinish macro
-	if SndDAC_End - SndDAC_Start > $8000
-		fatal "DAC samples must fit within $8000 bytes, but you have $\{SndDAC_End-SndDAC_Start } bytes of DAC samples."
+	if SndDAC_End - SndDAC_Start > $14594
+		fatal "DAC samples must fit within $14594 bytes, but you have $\{SndDAC_End-SndDAC_Start } bytes of DAC samples."
 	endif
 	if SndDAC_End - SndDAC_Start > Size_of_DAC_samples
 		fatal "Size_of_DAC_samples = $\{Size_of_DAC_samples}, but you have $\{SndDAC_End-SndDAC_Start} bytes of DAC samples."

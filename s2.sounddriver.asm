@@ -675,7 +675,9 @@ zWriteToDAC:
 	di			; disable interrupts (while updating DAC)
 	ld	a,2Ah		; DAC port
 	ld	(zYM2612_A0),a	; Set DAC port register
-	ld	a,(hl)		; Get next DAC byte
+	ld	a,(hl)			; Get next PCM byte
+	ld	(zYM2612_D0),a		; Send to DAC
+	inc	hl	
 	rlca
 	rlca
 	rlca
@@ -699,9 +701,7 @@ zWriteToDAC:
 	pop	af
 	ld	a,2Ah		; DAC port
 	ld	(zYM2612_A0),a	; Set DAC port register
-	ld	b,c		; reload 'b' with wait value
-	ld	a,(hl)		; Get next DAC byte
-	inc	hl		; Next byte in DAC stream...
+	ld	b,c		; reload 'b' with wait value	
 	dec	de		; One less byte
 	and	0Fh		; LOWER 4-bit offset into zDACDecodeTbl
 	ld	(.lownybble+2),a	; store into the instruction after .lownybble (self-modifying code)
@@ -709,7 +709,7 @@ zWriteToDAC:
 
 ; zloc_1A8
 .lownybble:
-	add	a,(iy+0)	; Get byte from zDACDecodeTbl (self-modified to proper index)
+	ld	a,(hl)			; Get next PCM byte
 	ld	(zYM2612_D0),a	; Write this byte to the DAC
 	ex	af,af'		; back to regular registers
 	ei			; enable interrupts (done updating DAC, busy waiting for next update)
@@ -719,8 +719,8 @@ zWriteToDAC:
 ; 'jman2050' DAC decode lookup table
 ; zbyte_1B3
 zDACDecodeTbl:
-	db	   0,    1,   2,   4,   8,  10h,  20h,  40h
-	db	 80h,   -1,  -2,  -4,  -8, -10h, -20h, -40h
+	db	 0,   0,  0,  0,  0, 0, 0, 0
+	db	 0,   0,  0,  0,  0, 0, 0, 0
 
 	; The following two tables are used for when an SFX terminates
 	; its track to properly restore the music track it temporarily took
@@ -3799,23 +3799,23 @@ idstart :=	81h
 
 	db	id(zDACPtr_Kick),1		; 81h
 	db	id(zDACPtr_Snare),1		; 82h
-	db	id(zDACPtr_Clap),6		; 83h
-	db	id(zDACPtr_Scratch),8		; 84h
-	db	id(zDACPtr_Timpani),1Bh		; 85h
-	db	id(zDACPtr_Toms),0Ah		; 86h
-	db	id(zDACPtr_Bongos),1Bh		; 87h
-	db	id(zDACPtr_Timpani),12h		; 88h
-	db	id(zDACPtr_Timpani),15h		; 89h
-	db	id(zDACPtr_Timpani),1Ch		; 8Ah
-	db	id(zDACPtr_Timpani),1Dh		; 8Bh
-	db	id(zDACPtr_Toms),2		; 8Ch
-	db	id(zDACPtr_Toms),5		; 8Dh
-	db	id(zDACPtr_Toms),8		; 8Eh
-	db	id(zDACPtr_Bongos),8		; 8Fh
-	db	id(zDACPtr_Bongos),0Bh		; 90h
-	db	id(zDACPtr_Bongos),12h		; 91h
-	db	id(zDACPtr_Crash),0Fh		; 92h
-	db	id(zDACPtr_Ride),0Fh		; 92h
+	db	id(zDACPtr_Clap),3		; 83h
+	db	id(zDACPtr_Scratch),4		; 84h
+	db	id(zDACPtr_Timpani),0Dh		; 85h
+	db	id(zDACPtr_Toms),5		; 86h
+	db	id(zDACPtr_Bongos),0Dh		; 87h
+	db	id(zDACPtr_Timpani),9		; 88h
+	db	id(zDACPtr_Timpani),5		; 89h
+	db	id(zDACPtr_Timpani),0Eh		; 8Ah
+	db	id(zDACPtr_Timpani),0Fh		; 8Bh
+	db	id(zDACPtr_Toms),1		; 8Ch
+	db	id(zDACPtr_Toms),2		; 8Dh
+	db	id(zDACPtr_Toms),4		; 8Eh
+	db	id(zDACPtr_Bongos),4		; 8Fh
+	db	id(zDACPtr_Bongos),5		; 90h
+	db	id(zDACPtr_Bongos),9		; 91h
+	db	id(zDACPtr_Crash),7		; 92h
+	db	id(zDACPtr_Ride),7		; 93h
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; zsub_1271
