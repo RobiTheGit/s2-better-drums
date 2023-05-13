@@ -3755,35 +3755,26 @@ zSpedUpTempoTable:
 	; DAC sample pointers and lengths
 	ensure1byteoffset 1Ch
 ; zDACPtr_Index zbyte_1233
+DACSize macro Sample
+	dw	zmake68kPtr(Sample)
+	dw	Sample_End-Sample
+	endm
+
+; The kick is unable to use the macro because it has control over the the start of the pointers, and will cause unwanted things if it isn't lined up right	
 zDACPtrTbl:
 zDACPtr_Kick:	dw	zmake68kPtr(SndDAC_Kick)
-; zbyte_1235
+
 zDACLenTbl:
 			dw	SndDAC_Kick_End-SndDAC_Kick
 
-zDACPtr_Snare:	dw	zmake68kPtr(SndDAC_Snare)
-			dw	SndDAC_Snare_End-SndDAC_Snare
-
-zDACPtr_Clap:	dw	zmake68kPtr(SndDAC_Clap)
-			dw	SndDAC_Clap_End-SndDAC_Clap
-
-zDACPtr_Scratch:	dw	zmake68kPtr(SndDAC_Scratch)
-			dw	SndDAC_Scratch_End-SndDAC_Scratch
-
-zDACPtr_Timpani:	dw	zmake68kPtr(SndDAC_Timpani)
-			dw	SndDAC_Timpani_End-SndDAC_Timpani
-
-zDACPtr_Toms:	dw	zmake68kPtr(SndDAC_Toms)
-			dw	SndDAC_Toms_End-SndDAC_Toms
-
-zDACPtr_Bongos:	dw	zmake68kPtr(SndDAC_Bongos)
-			dw	SndDAC_Bongos_End-SndDAC_Bongos
-			
-zDACPtr_Crash:	dw	zmake68kPtr(SndDAC_Crash)
-			dw	SndDAC_Crash_End-SndDAC_Crash
-			
-zDACPtr_Ride:	dw	zmake68kPtr(SndDAC_Ride)
-			dw	SndDAC_Ride_End-SndDAC_Ride
+zDACPtr_Snare:		DACSize	SndDAC_Snare	
+zDACPtr_Clap:		DACSize	SndDAC_Clap
+zDACPtr_Scratch:	DACSize SndDAC_Scratch
+zDACPtr_Timpani:	DACSize SndDAC_Timpani
+zDACPtr_Toms:		DACSize SndDAC_Toms
+zDACPtr_Bongos:		DACSize SndDAC_Bongos
+zDACPtr_Crash:		DACSize SndDAC_Crash
+zDACPtr_Ride:		DACSize SndDAC_Ride			
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples. The number that
 	; follows it is a wait time between each nibble written to the DAC
@@ -3799,23 +3790,23 @@ idstart :=	81h
 
 	db	id(zDACPtr_Kick),1		; 81h
 	db	id(zDACPtr_Snare),1		; 82h
-	db	id(zDACPtr_Clap),3		; 83h
-	db	id(zDACPtr_Scratch),4		; 84h
-	db	id(zDACPtr_Timpani),0Dh		; 85h
-	db	id(zDACPtr_Toms),5		; 86h
-	db	id(zDACPtr_Bongos),0Dh		; 87h
-	db	id(zDACPtr_Timpani),9		; 88h
-	db	id(zDACPtr_Timpani),5		; 89h
-	db	id(zDACPtr_Timpani),0Eh		; 8Ah
-	db	id(zDACPtr_Timpani),0Fh		; 8Bh
+	db	id(zDACPtr_Clap),3/2		; 83h
+	db	id(zDACPtr_Scratch),4/2		; 84h
+	db	id(zDACPtr_Timpani),0Dh/2		; 85h
+	db	id(zDACPtr_Toms),5/2		; 86h
+	db	id(zDACPtr_Bongos),0Dh/2		; 87h
+	db	id(zDACPtr_Timpani),9/2		; 88h
+	db	id(zDACPtr_Timpani),5/2		; 89h
+	db	id(zDACPtr_Timpani),0Eh/2		; 8Ah
+	db	id(zDACPtr_Timpani),0Fh/2		; 8Bh
 	db	id(zDACPtr_Toms),1		; 8Ch
-	db	id(zDACPtr_Toms),2		; 8Dh
-	db	id(zDACPtr_Toms),4		; 8Eh
-	db	id(zDACPtr_Bongos),4		; 8Fh
-	db	id(zDACPtr_Bongos),5		; 90h
-	db	id(zDACPtr_Bongos),9		; 91h
-	db	id(zDACPtr_Crash),7		; 92h
-	db	id(zDACPtr_Ride),7		; 93h
+	db	id(zDACPtr_Toms),2/2		; 8Dh
+	db	id(zDACPtr_Toms),4/2		; 8Eh
+	db	id(zDACPtr_Bongos),4/2		; 8Fh
+	db	id(zDACPtr_Bongos),5/2		; 90h
+	db	id(zDACPtr_Bongos),9/2		; 91h
+	db	id(zDACPtr_Crash),7/2		; 92h
+	db	id(zDACPtr_Ride),7/2		; 93h
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; zsub_1271
