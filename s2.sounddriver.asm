@@ -304,6 +304,9 @@ endpad := $
 ; assuming the correct bank has been switched to first
 zmake68kPtr function addr,zROMWindow+(addr&7FFFh)
 
+; function to turn a 68k address into a bank byte
+zmake68kBank function addr,(((addr&3F8000h)/zROMWindow))
+
 ; Function to turn a sample rate into a djnz loop counter
 pcmLoopCounter function sampleRate,baseCycles, 1+(53693175/15/(sampleRate)-(baseCycles)+(13/2))/13
 
@@ -1634,35 +1637,30 @@ zBGMLoad:
 	ld	(zAbsVar.TempoTurbo),a		; Store 'a' here (provides an alternate tempo or something for speed up mode)
 	ld	hl,zMasterPlaylist		; Get address of the zMasterPlaylist
 	add	hl,de				; Add the 16-bit offset here
-	ld	a,(hl)				; Get "fixed" index
-	ld	b,a				; 'a' -> 'b'
-	; The following instructions enable a bankswitch routine
-	and	80h				; Get only 'bank' bit
-	ld	(zAbsVar.MusicBankNumber),a	; Store this (use to enable alternate bank)
-	ld	a,b				; Restore 'a'
-	add	a,a				; Adding a+a causes a possible overflow and a multiplication by 2
-	add	a,a				; Now multiplied by 4 and another possible overflow
+	add	hl,de				; Add the 16-bit offset here
+	add	hl,de				; Add the 16-bit offset here
+	add	hl,de				; Add the 16-bit offset here
+	ld	a,(hl)				; Get bank index
+	inc	hl				; Advance pointer
+	ld	(zAbsVar.MusicBankNumber),a	; Store bank index
+	ld	a,(hl)				; Get song flags
+	inc	hl				; Advance pointer
+	add	a,a				; Adding a+a causes an overflow and a multiplication by 2
+	add	a,a				; Now multiplied by 4
 	ld	c,a				; Result -> 'c'
-	ccf					; Invert carry flag...
-	sbc	a,a				; ... so that this sets a to FFh if bit 6 of original a was clear (allow PAL double-update), zero otherwise (do not allow PAL double-update)
-	ld	(zAbsVar.IsPalFlag),a		; Set IsPalFlag
+	ccf					; Clear carry flag...
+	sbc	a,a				; ... reverse subtract with carry that was set to zero ... umm.. a=0 in a funny way?
+	ld	(zAbsVar.IsPalFlag),a		; Clear zIsPalFlag?
 	ld	a,c				; Put prior multiply result back in
 	add	a,a				; Now multiplied by 8!
-	sbc	a,a				; This is FFh if bit 5 of original a was set (uncompressed song), zero otherwise (compressed song)
+	sbc	a,a				; This is nonzero if bit 5 of original a is set, zero otherwise (uncompressed song flag)
 	push	af				; Backing up result...?
-	ld	a,b				; Put 80h based index -> 'a'
-	and	1Fh				; Strip the flag bits
-	add	a,a				; multiply by 2; now 'a' is offset into music table, save for the $8000
-	ld	e,a
-	ld	d,0				; de = a
-	ld	hl,zROMWindow
-	add	hl,de				; "hl" now contains 2-byte offset for music address table lookup
+	ld	e,(hl)				; Read low byte of pointer into e
+	inc	hl				; Advance pointer
+	ld	d,(hl)				; Read high byte of pointer into d
 	push	hl				; Save 'hl' (will be damaged by bank switch)
 	call	zBankSwitchToMusic		; Bank switch to start of music in ROM!
 	pop	hl				; Restore 'hl'
-	ld	e,(hl)
-	inc	hl
-	ld	d,(hl)				; Getting offset within bank to music -> de
 
 	; If we bypass the Saxman decompressor, the Z80 engine starts
 	; with the assumption that we're already decompressed with 'de' pointing
@@ -2687,14 +2685,14 @@ zFMNoteOff:
 ; zsub_C63:
 zBankSwitchToMusic:
 	ld	a,(zAbsVar.MusicBankNumber)
-	or	a
-	jr	nz,zSwitchToBank2
-
-	bankswitch MusicPoint1
-	ret
-
-zSwitchToBank2:
-	bankswitch MusicPoint2
+	ld	hl, zBankRegister
+	ld	(hl),a
+    rept 7
+	rra
+	ld	(hl), a
+    endm
+	xor	a
+	ld	(hl),a
 	ret
 ; End of function zBankSwitchToMusic
 
@@ -3654,47 +3652,48 @@ PSG_EV13:
 
 ;	END of zPSG_EnvTbl -------------------------------
 
+zmakePlaylistEntry macro addr,val
+	db	zmake68kBank(addr),val
+	dw	zmake68kPtr(addr)
+    endm
+
 ; zbyte_11F5h
 zMasterPlaylist:
 
-; Music IDs
-offset :=	MusicPoint2
-ptrsize :=	2
-idstart :=	80h
-; note: +20h means uncompressed, here
-; +40h is a flag that forces PAL mode off when set
+; note: 20h means uncompressed, here
+; 40h is a flag that forces PAL mode off when set
 
-zMusIDPtr_2PResult:	db	id(MusPtr_2PResult)	; 92
-zMusIDPtr_EHZ:		db	id(MusPtr_EHZ)		; 81
-zMusIDPtr_MCZ_2P:	db	id(MusPtr_MCZ_2P)	; 85
-zMusIDPtr_OOZ:		db	id(MusPtr_OOZ)		; 8F
-zMusIDPtr_MTZ:		db	id(MusPtr_MTZ)		; 82
-zMusIDPtr_HTZ:		db	id(MusPtr_HTZ)		; 94
-zMusIDPtr_ARZ:		db	id(MusPtr_ARZ)		; 86
-zMusIDPtr_CNZ_2P:	db	id(MusPtr_CNZ_2P)	; 80
-zMusIDPtr_CNZ:		db	id(MusPtr_CNZ)		; 83
-zMusIDPtr_DEZ:		db	id(MusPtr_DEZ)		; 87
-zMusIDPtr_MCZ:		db	id(MusPtr_MCZ)		; 84
-zMusIDPtr_EHZ_2P:	db	id(MusPtr_EHZ_2P)	; 91
-zMusIDPtr_SCZ:		db	id(MusPtr_SCZ)		; 8E
-zMusIDPtr_CPZ:		db	id(MusPtr_CPZ)		; 8C
-zMusIDPtr_WFZ:		db	id(MusPtr_WFZ)		; 90
-zMusIDPtr_HPZ:		db	id(MusPtr_HPZ)		; 9B
-zMusIDPtr_Options:	db	id(MusPtr_Options)	; 89
-zMusIDPtr_SpecStage:	db	id(MusPtr_SpecStage)	; 88
-zMusIDPtr_Boss:		db	id(MusPtr_Boss)		; 8D
-zMusIDPtr_EndBoss:	db	id(MusPtr_EndBoss)	; 8B
-zMusIDPtr_Ending:	db	id(MusPtr_Ending)	; 8A
-zMusIDPtr_SuperSonic:	db	id(MusPtr_SuperSonic)	; 93
-zMusIDPtr_Invincible:	db	id(MusPtr_Invincible)	; 99
-zMusIDPtr_ExtraLife:	db	id(MusPtr_ExtraLife)+20h; B5
-zMusIDPtr_Title:	db	id(MusPtr_Title)	; 96
-zMusIDPtr_EndLevel:	db	id(MusPtr_EndLevel)	; 97
-zMusIDPtr_GameOver:	db	id(MusPtr_GameOver)+20h	; B8
-zMusIDPtr_Continue:	db	(MusPtr_Continue-MusicPoint1)/ptrsize	; 0
-zMusIDPtr_Emerald:	db	id(MusPtr_Emerald)+20h	; BA
-zMusIDPtr_Credits:	db	id(MusPtr_Credits)+20h	; BD
-zMusIDPtr_Countdown:	db	id(MusPtr_Drowning)+40h	; DC
+zMusIDPtr_2PResult:	zmakePlaylistEntry Mus_2PResult,0	; 92
+zMusIDPtr_EHZ:		zmakePlaylistEntry Mus_EHZ,0		; 81
+zMusIDPtr_MCZ_2P:	zmakePlaylistEntry Mus_MCZ_2P,0		; 85
+zMusIDPtr_OOZ:		zmakePlaylistEntry Mus_OOZ,0		; 8F
+zMusIDPtr_MTZ:		zmakePlaylistEntry Mus_MTZ,0		; 82
+zMusIDPtr_HTZ:		zmakePlaylistEntry Mus_HTZ,0		; 94
+zMusIDPtr_ARZ:		zmakePlaylistEntry Mus_ARZ,0		; 86
+zMusIDPtr_CNZ_2P:	zmakePlaylistEntry Mus_CNZ_2P,0		; 80
+zMusIDPtr_CNZ:		zmakePlaylistEntry Mus_CNZ,0		; 83
+zMusIDPtr_DEZ:		zmakePlaylistEntry Mus_DEZ,0		; 87
+zMusIDPtr_MCZ:		zmakePlaylistEntry Mus_MCZ,0		; 84
+zMusIDPtr_EHZ_2P:	zmakePlaylistEntry Mus_EHZ_2P,0		; 91
+zMusIDPtr_SCZ:		zmakePlaylistEntry Mus_SCZ,0		; 8E
+zMusIDPtr_CPZ:		zmakePlaylistEntry Mus_CPZ,0		; 8C
+zMusIDPtr_WFZ:		zmakePlaylistEntry Mus_WFZ,0		; 90
+zMusIDPtr_HPZ:		zmakePlaylistEntry Mus_HPZ,0		; 9B
+zMusIDPtr_Options:	zmakePlaylistEntry Mus_Options,0	; 89
+zMusIDPtr_SpecStage:	zmakePlaylistEntry Mus_SpecStage,0	; 88
+zMusIDPtr_Boss:		zmakePlaylistEntry Mus_Boss,0		; 8D
+zMusIDPtr_EndBoss:	zmakePlaylistEntry Mus_EndBoss,0	; 8B
+zMusIDPtr_Ending:	zmakePlaylistEntry Mus_Ending,0		; 8A
+zMusIDPtr_SuperSonic:	zmakePlaylistEntry Mus_SuperSonic,0	; 93
+zMusIDPtr_Invincible:	zmakePlaylistEntry Mus_Invincible,0	; 99
+zMusIDPtr_ExtraLife:	zmakePlaylistEntry Mus_ExtraLife,20h 	; B5
+zMusIDPtr_Title:	zmakePlaylistEntry Mus_Title,0	        ; 96
+zMusIDPtr_EndLevel:	zmakePlaylistEntry Mus_EndLevel,0	; 97
+zMusIDPtr_GameOver:	zmakePlaylistEntry Mus_GameOver,20h	; B8
+zMusIDPtr_Continue:	zmakePlaylistEntry Mus_Continue,0	; 0
+zMusIDPtr_Emerald:	zmakePlaylistEntry Mus_Emerald,20h	; BA
+zMusIDPtr_Credits:	zmakePlaylistEntry Mus_Credits,20h	; BD
+zMusIDPtr_Countdown:	zmakePlaylistEntry Mus_Drowning,40h	; DC
 zMusIDPtr__End:
 
 ; Tempo with speed shoe tempo for each song

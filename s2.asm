@@ -92084,9 +92084,6 @@ SndDAC_End
 ; ---------------------------------------------------------------------------
 ; loc_F0000:
 MusicPoint1:	startBank
-MusPtr_Continue:	rom_ptr_z80	Mus_Continue
-
-
 Mus_Continue:   BINCLUDE	"sound/music/compressed/9C - Continue.bin"
 
 	finishBank
@@ -92250,37 +92247,6 @@ Snd_Sega_End:
 ; ------------------------------------------------------------------------------
 ; loc_F8000:
 MusicPoint2:	startBank
-MusPtr_CNZ_2P:		rom_ptr_z80	Mus_CNZ_2P
-MusPtr_EHZ:		rom_ptr_z80	Mus_EHZ
-MusPtr_MTZ:		rom_ptr_z80	Mus_MTZ
-MusPtr_CNZ:		rom_ptr_z80	Mus_CNZ
-MusPtr_MCZ:		rom_ptr_z80	Mus_MCZ
-MusPtr_MCZ_2P:		rom_ptr_z80	Mus_MCZ_2P
-MusPtr_ARZ:		rom_ptr_z80	Mus_ARZ
-MusPtr_DEZ:		rom_ptr_z80	Mus_DEZ
-MusPtr_SpecStage:	rom_ptr_z80	Mus_SpecStage
-MusPtr_Options:		rom_ptr_z80	Mus_Options
-MusPtr_Ending:		rom_ptr_z80	Mus_Ending
-MusPtr_EndBoss:		rom_ptr_z80	Mus_EndBoss
-MusPtr_CPZ:		rom_ptr_z80	Mus_CPZ
-MusPtr_Boss:		rom_ptr_z80	Mus_Boss
-MusPtr_SCZ:		rom_ptr_z80	Mus_SCZ
-MusPtr_OOZ:		rom_ptr_z80	Mus_OOZ
-MusPtr_WFZ:		rom_ptr_z80	Mus_WFZ
-MusPtr_EHZ_2P:		rom_ptr_z80	Mus_EHZ_2P
-MusPtr_2PResult:	rom_ptr_z80	Mus_2PResult
-MusPtr_SuperSonic:	rom_ptr_z80	Mus_SuperSonic
-MusPtr_HTZ:		rom_ptr_z80	Mus_HTZ
-MusPtr_ExtraLife:	rom_ptr_z80	Mus_ExtraLife
-MusPtr_Title:		rom_ptr_z80	Mus_Title
-MusPtr_EndLevel:	rom_ptr_z80	Mus_EndLevel
-MusPtr_GameOver:	rom_ptr_z80	Mus_GameOver
-MusPtr_Invincible:	rom_ptr_z80	Mus_Invincible
-MusPtr_Emerald:		rom_ptr_z80	Mus_Emerald
-MusPtr_HPZ:		rom_ptr_z80	Mus_HPZ
-MusPtr_Drowning:	rom_ptr_z80	Mus_Drowning
-MusPtr_Credits:		rom_ptr_z80	Mus_Credits
-
 ; loc_F803C:
 Mus_HPZ:	BINCLUDE	"sound/music/compressed/90 - HPZ.bin"
 Mus_Drowning:	BINCLUDE	"sound/music/compressed/9F - Drowning.bin"
