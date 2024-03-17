@@ -323,17 +323,14 @@ zPalModeByte:
 	db	0
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-    if OptimiseDriver=0	; This is redundant: the Z80 is slow enough to not need to worry about this
 	align	8
-; zsub_8
-zFMBusyWait:    rsttarget
-	; Performs the annoying task of waiting for the FM to not be busy
-	ld	a,(zYM2612_A0)
-	add	a,a
-	jr	c,zFMBusyWait
-	ret
-; End of function zFMBusyWait
-    endif
+; Performs a bank switch to where the music for the current track is at
+; (there are two possible bank locations for music)
+
+; zsub_C63:
+zBankSwitchToMusic:	rsttarget
+	ld	a,(zAbsVar.MusicBankNumber)
+	jp	zBankSwitch
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 	align	8
@@ -349,16 +346,8 @@ zWriteFMIorII:    rsttarget
 ; zsub_18
 zWriteFMI:    rsttarget
 	; Write reg/data pair to part I; 'a' is register, 'c' is data
-    if OptimiseDriver=0
-	push	af
-	rst	zFMBusyWait ; 'rst' is like 'call' but only works for 8-byte aligned addresses <= 38h
-	pop	af
-    endif
 	ld	(zYM2612_A0),a
 	push	af
-    if OptimiseDriver=0
-	rst	zFMBusyWait
-    endif
 	ld	a,c
 	ld	(zYM2612_D0),a
 	pop	af
@@ -370,16 +359,8 @@ zWriteFMI:    rsttarget
 ; zsub_28
 zWriteFMII:    rsttarget
 	; Write reg/data pair to part II; 'a' is register, 'c' is data
-    if OptimiseDriver=0
-	push	af
-	rst	zFMBusyWait
-	pop	af
-    endif
 	ld	(zYM2612_A1),a
 	push	af
-    if OptimiseDriver=0
-	rst	zFMBusyWait
-    endif
 	ld	a,c
 	ld	(zYM2612_D1),a
 	pop	af
@@ -394,7 +375,7 @@ zVInt:    rsttarget
 
 	push	af			; Save 'af'
 	exx				; Effectively backs up 'bc', 'de', and 'hl'
-	call	zBankSwitchToMusic	; Bank switch to the music
+	rst	zBankSwitchToMusic	; Bank switch to the music
 	xor	a			; Clear 'a'
 	ld	(zDoSFXFlag),a		; Not updating SFX (updating music)
 	ld	ix,zAbsVar		; ix points to zComRange
@@ -450,7 +431,7 @@ zUpdateEverything:
 	call	zUpdateMusic
 
 	; Now all of the SFX tracks are updated in a similar manner to "zUpdateMusic"...
-	bankswitch SoundIndex		; Bank switch to sound effects
+	call	zBankSwitchToSound	; Bank switch to sound effects
 
 	ld	a,80h
 	ld	(zDoSFXFlag),a		; Set zDoSFXFlag = 80h (updating sound effects)
@@ -491,7 +472,8 @@ zUpdateDAC:
 	ld	a,2Ah			; DAC port
 	ld	(zYM2612_A0),a		; Set DAC port register
 
-	bankswitch SndDAC_Start		; Bankswitch to the DAC data
+	ld	a,zmake68kBank(SndDAC_Start)
+	call	zBankSwitch		; Bankswitch to the DAC data
 
 	ld	a,(zCurDAC)		; Get currently playing DAC sound
 	or	a
@@ -1048,8 +1030,7 @@ zFMUpdateFreq:
 	rst	zWriteFMIorII			; Write it!
 	ld	c,l				; lower part of frequency
 	sub	4				; A0h+ register
-	rst	zWriteFMIorII			; Write it!
-	ret
+	jp	zWriteFMIorII			; Write it!
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -1317,11 +1298,7 @@ zPSGNoteOff:
 
 ; ---------------------------------------------------------------------------
 ; lookup table of FM note frequencies for instruments and sound effects
-    if OptimiseDriver
-	ensure1byteoffset 18h
-    else
-	ensure1byteoffset 0C0h
-    endif
+	align 100h
 ; zbyte_534
 zFrequencies:
 	dw 025Eh,0284h,02ABh,02D3h,02FEh,032Dh,035Ch,038Fh,03C5h,03FFh,043Ch,047Ch
@@ -1370,7 +1347,7 @@ zPauseMusic:
 	ld	b,MUSIC_DAC_FM_TRACK_COUNT	; 1 DAC + 6 FM
 	call	zResumeTrack
 
-	bankswitch SoundIndex		; Now for SFX
+	call	zBankSwitchToSound	; Now for SFX
 
 	ld	a,0FFh			; a = 0FFH
 	ld	(zDoSFXFlag),a		; Set flag to say we are updating SFX
@@ -1380,7 +1357,7 @@ zPauseMusic:
 	xor	a			; a = 0
 	ld	(zDoSFXFlag),a		; Clear SFX updating flag
     if OptimiseDriver=0
-	call	zBankSwitchToMusic	; Back to music (Pointless: music isn't updated until the next frame)
+	rst	zBankSwitchToMusic	; Back to music (Pointless: music isn't updated until the next frame)
 	pop	ix			; Restore ix (nothing uses this, beyond this point...)
     endif
 	ret
@@ -1565,7 +1542,7 @@ zPlaySegaSound:
 	; to pcmLoopCounter should be 146 divided by 2.
 
 .stop:
-	call	zBankSwitchToMusic
+	rst	zBankSwitchToMusic
 	ld	a,(zAbsVar.DACEnabled)	; DAC status
 	ld	c,a			; c = DAC status
 	ld	a,2Bh			; DAC enable/disable register
@@ -1659,7 +1636,7 @@ zBGMLoad:
 	inc	hl				; Advance pointer
 	ld	d,(hl)				; Read high byte of pointer into d
 	push	hl				; Save 'hl' (will be damaged by bank switch)
-	call	zBankSwitchToMusic		; Bank switch to start of music in ROM!
+	rst	zBankSwitchToMusic		; Bank switch to start of music in ROM!
 	pop	hl				; Restore 'hl'
 
 	; If we bypass the Saxman decompressor, the Z80 engine starts
@@ -2061,7 +2038,7 @@ zPlaySound_CheckSpindash:
 
 ; zloc_975:
 zPlaySound:
-	bankswitch SoundIndex			; Switch to SFX banks
+	call	zBankSwitchToSound		; Switch to SFX banks
 
 	ld	hl,zmake68kPtr(SoundIndex)	; 'hl' points to beginning of SFX bank in ROM window
 	ld	a,c				; 'c' -> 'a'
@@ -2679,12 +2656,12 @@ zFMNoteOff:
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-; Performs a bank switch to where the music for the current track is at
-; (there are two possible bank locations for music)
+; Performs a bank switch
 
-; zsub_C63:
-zBankSwitchToMusic:
-	ld	a,(zAbsVar.MusicBankNumber)
+zBankSwitchToSound:
+	ld	a,zmake68kBank(SoundIndex)
+
+zBankSwitch:
 	ld	hl, zBankRegister
 	ld	(hl),a
     rept 7
@@ -2936,7 +2913,7 @@ cfFadeInToPrevious:
 	ld	bc,zTracksSaveEnd-zTracksSaveStart	; for this many bytes
 	ldir					; Go!
 
-	call	zBankSwitchToMusic
+	rst	zBankSwitchToMusic
 	ld	a,(zSongDAC.PlaybackControl)	; Get DAC's playback bit
 	or	4
 	ld	(zSongDAC.PlaybackControl),a	; Set "SFX is overriding" on it (not normal, but will work for this purpose)
@@ -3392,13 +3369,14 @@ zStoppedChannel:	; General stop track continues here...
 	ld	ix,(zMusicTrackOffs)		; Self-modified code from just above: 'ix' points to corresponding Music FM track
 	bit	2,(ix+zTrack.PlaybackControl)	; If "SFX is overriding this track" is not set...
 	jp	z,zNoVoiceUpdate		; Skip this part (i.e. if SFX was not overriding this track, then nothing to restore)
-	call	zBankSwitchToMusic		; Bank switch back to music track
+	rst	zBankSwitchToMusic		; Bank switch back to music track
 	res	2,(ix+zTrack.PlaybackControl)	; Clear SFX is overriding this track from playback control
 	set	1,(ix+zTrack.PlaybackControl)	; Set track as resting bit
 	ld	a,(ix+zTrack.VoiceIndex)	; Get voice this track was using
 	call	zSetVoiceMusic			; And set it! (takes care of volume too)
 
-	bankswitch SoundIndex
+	ld	a,zmake68kBank(SoundIndex)
+	call	zBankSwitch
 
 zNoVoiceUpdate:
 	pop	ix	; restore 'ix'
