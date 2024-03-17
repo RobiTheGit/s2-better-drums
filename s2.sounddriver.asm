@@ -472,7 +472,13 @@ zUpdateDAC:
 	ld	a,2Ah			; DAC port
 	ld	(zYM2612_A0),a		; Set DAC port register
 
-	ld	a,zmake68kBank(SndDAC_Start)
+	ld	a,(zCurDAC)		; Get currently playing DAC sound
+	and	7Fh			; Strip 'queued' bit
+	add	a,zDACBanks&0FFh	; Offset into list
+	ld	(.writeme+1),a		; Store into the instruction after .writeme (self-modifying code)
+
+.writeme:
+	ld	a,(zDACBanks)		; Get DAC's bank value
 	call	zBankSwitch		; Bankswitch to the DAC data
 
 	ld	a,(zCurDAC)		; Get currently playing DAC sound
@@ -488,9 +494,9 @@ zUpdateDAC:
 	; If you get here, it's time to start a new DAC sound...
 	ld	a,80h
 	ex	af,af'	;'
-	ld	a,(zCurDAC)		; Get current DAC sound
-	sub	81h			; Subtract 81h (first DAC index is 81h)
-	ld	(zCurDAC),a		; Store that as current DAC sound
+	ld	hl,zCurDAC		; Get address of 'current DAC sound' value
+	res	7,(hl)			; Subtract 80h (first DAC index is 80h)
+	ld	a,(hl)			; Get current DAC sound value
 	; The following two instructions are dangerous: they discard the upper
 	; two bits of zCurDAC, meaning you can only have 40h DAC samples.
 	add	a,a
@@ -3720,7 +3726,7 @@ zDACMasterPlaylist:
 ; DAC samples IDs
 offset :=	zDACPtrTbl
 ptrsize :=	2+2
-idstart :=	81h
+idstart :=	80h
 
 dac_sample_metadata macro label,sampleRate
 	db	id(label),pcmLoopCounter(sampleRate,90/2)	; See zWriteToDAC for an explanation of this magic number.
@@ -3743,8 +3749,20 @@ dac_sample_metadata macro label,sampleRate
 	dac_sample_metadata zDACPtr_Bongos, 15000	; 8Fh
 	dac_sample_metadata zDACPtr_Bongos, 13000	; 90h
 	dac_sample_metadata zDACPtr_Bongos,  9750	; 91h
-	dac_sample_metadata zDACPtr_Crash,  15000	; 92h
-	dac_sample_metadata zDACPtr_Ride,   15000	; 93h
+	dac_sample_metadata zDACPtr_Crash,  44000	; 92h
+	dac_sample_metadata zDACPtr_Ride,   44000	; 93h
+
+	ensure1byteoffset 9
+zDACBanks:
+	db	zmake68kBank(SndDAC_Kick)
+	db	zmake68kBank(SndDAC_Snare)
+	db	zmake68kBank(SndDAC_Clap)
+	db	zmake68kBank(SndDAC_Scratch)
+	db	zmake68kBank(SndDAC_Timpani)
+	db	zmake68kBank(SndDAC_Toms)
+	db	zmake68kBank(SndDAC_Bongos)
+	db	zmake68kBank(SndDAC_Crash)
+	db	zmake68kBank(SndDAC_Ride)
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
