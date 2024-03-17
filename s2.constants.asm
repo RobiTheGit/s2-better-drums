@@ -4,8 +4,6 @@
 ; ---------------------------------------------------------------------------
 ; size variables - you'll get an informational error if you need to change these...
 ; they are all in units of bytes
-Size_of_DAC_samples =		$14594
-Size_of_SEGA_sound =		$6174
 Size_of_Snd_driver_guess =	$F64 ; approximate post-compressed size of the Z80 sound driver
 
 ; ---------------------------------------------------------------------------
@@ -741,7 +739,7 @@ ObjID_RingPrize =		id(ObjPtr_RingPrize)		; DC
 
 ; Music IDs
 offset :=	zMasterPlaylist
-ptrsize :=	1
+ptrsize :=	4
 idstart :=	$81
 ; $80 is reserved for silence, so if you make idstart $80 or less,
 ; you may need to insert a dummy zMusIDPtr in the $80 slot

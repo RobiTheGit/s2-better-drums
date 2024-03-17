@@ -99,7 +99,7 @@ Title_screen_DAC:
 	dc.b	dSnare, dKick, dSnare, dKick, dSnare, dKick, dSnare, dKick, dSnare, dKick, dSnare, dKick
 	dc.b	$06, nRst, $02, dSnare, dSnare, dSnare, $09, dSnare, $03, dKick, $0C, dSnare
 	dc.b	dSnare, $04, dSnare, dSnare, dSnare, nRst, nRst, dSnare, $06, dSnare, $12, dSnare
-	dc.b	$0C, dKick
+	dc.b	$0C, dCrashCymbal
 	smpsStop
 
 ; PSG2 Data
