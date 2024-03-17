@@ -676,9 +676,9 @@ zWriteToDAC:
 	pop	hl			; 10
 	ei				; 4
 
-	jp	zWaitLoop		; 12	; Back to the wait loop; if there's more DAC to write, we come back down again!
-					; 183
-	; 183 cycles for two samples. zDACMasterPlaylist should use 183
+	jp	zWaitLoop		; 10	; Back to the wait loop; if there's more DAC to write, we come back down again!
+					; 181
+	; 181 cycles for two samples. zDACMasterPlaylist should use 181
 	; divided by 2 as the second parameter to pcmLoopCounter.
 
 ; ---------------------------------------------------------------------------
@@ -3744,7 +3744,7 @@ ptrsize :=	2+2
 idstart :=	80h
 
 dac_sample_metadata macro label,sampleRate
-	db	id(label),pcmLoopCounter(sampleRate,183/2)	; See zWriteToDAC for an explanation of this magic number.
+	db	id(label),pcmLoopCounter(sampleRate,181/2)	; See zWriteToDAC for an explanation of this magic number.
     endm
 
 	dac_sample_metadata zDACPtr_Kick,   28000	; 81h
