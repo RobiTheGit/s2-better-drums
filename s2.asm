@@ -92046,15 +92046,6 @@ Snd_Driver_End:
 
 
 ; ---------------------------------------------------------------------------
-; Filler (free space)
-; ---------------------------------------------------------------------------
-	; the DAC data has to line up with the end of the bank.
-
-	; actually it only has to fit within one bank, but we'll line it up to the end anyway
-	; because the padding gives the sound driver some room to grow
-	cnop -Size_of_DAC_samples, $8000
-
-; ---------------------------------------------------------------------------
 ; DAC samples
 ; ---------------------------------------------------------------------------
 ; loc_ED100:
@@ -92064,8 +92055,10 @@ __LABEL__ label *
 __LABEL___End label *
 	endm
 	
-      
-SndDAC_Start: 
+
+; We do not worry about aligning the samples to bank boundaries
+; since the driver can automatically switch banks.
+DACData:
 SndDAC_Kick:	DAC 81 - Kick
 SndDAC_Snare:	DAC 82 - Snare
 SndDAC_Timpani:	DAC 85 - Timpani
@@ -92075,8 +92068,6 @@ SndDAC_Scratch:	DAC 84 - Scratch
 SndDAC_Bongos:	DAC 87 - Bongo
 SndDAC_Crash:	DAC 92 - CrashCymbal
 SndDAC_Ride:	DAC 93 - RideCymbal
-SndDAC_End
-	DACFinish
 
 
 ; ---------------------------------------------------------------------------
@@ -92221,27 +92212,6 @@ ArtNem_VinePulley:	BINCLUDE	"art/nemesis/Vine that lowers from MCZ.bin"
 	even
 ArtNem_MCZGateLog:	BINCLUDE	"art/nemesis/Drawbridge logs from MCZ.bin"
 
-; ----------------------------------------------------------------------------------
-; Filler (free space)
-; ----------------------------------------------------------------------------------
-	; the PCM data has to line up with the end of the bank.
-	cnop -Size_of_SEGA_sound, $8000
-
-; -------------------------------------------------------------------------------
-; Sega Intro Sound
-; 8-bit unsigned raw audio at 16Khz
-; -------------------------------------------------------------------------------
-; loc_F1E8C:
-Snd_Sega:	BINCLUDE	"sound/PCM/SEGA.bin"
-Snd_Sega_End:
-
-	if Snd_Sega_End - Snd_Sega > $8000
-		fatal "Sega sound must fit within $8000 bytes, but you have a $\{Snd_Sega_End-Snd_Sega} byte Sega sound."
-	endif
-	if Snd_Sega_End - Snd_Sega > Size_of_SEGA_sound
-		fatal "Size_of_SEGA_sound = $\{Size_of_SEGA_sound}, but you have a $\{Snd_Sega_End-Snd_Sega} byte Sega sound."
-	endif
-
 ; ------------------------------------------------------------------------------
 ; Music pointers
 ; ------------------------------------------------------------------------------
@@ -92279,6 +92249,7 @@ Mus_ExtraLife:	include		"sound/music/98 - Extra Life.asm"
 Mus_GameOver:	include		"sound/music/9B - Game Over.asm"
 Mus_Emerald:	include		"sound/music/9D - Got Emerald.asm"
 Mus_Credits:	include		"sound/music/9E - Credits.asm"
+		finishBank
 
 ; ------------------------------------------------------------------------------------------
 ; Sound effect pointers
@@ -92294,7 +92265,9 @@ Mus_Credits:	include		"sound/music/9E - Credits.asm"
 ;       a sound can get dropped if a higher-priority sound is already playing.
 ;	see zSFXPriority for the priority allocation itself.
 ; loc_FEE91: SoundPoint:
-SoundIndex:
+SoundBank:		startBank
+
+SoundIndex:		
 SndPtr_Jump:		rom_ptr_z80	Sound20	; jumping sound
 SndPtr_Checkpoint:	rom_ptr_z80	Sound21	; checkpoint ding-dong sound
 SndPtr_SpikeSwitch:	rom_ptr_z80	Sound22	; spike switch sound
@@ -92463,7 +92436,13 @@ Sound6D:	include "sound/sfx/ED - Error.asm"
 Sound6E:	include "sound/sfx/EE - Mecha Sonic Buzz.asm"
 Sound6F:	include "sound/sfx/EF - Large Laser.asm"
 Sound70:	include "sound/sfx/F0 - Oil Slide.asm"
-
+; -------------------------------------------------------------------------------
+; Sega Intro Sound
+; 8-bit unsigned raw audio at 16Khz
+; -------------------------------------------------------------------------------
+; loc_F1E8C:
+Snd_Sega:	BINCLUDE	"sound/PCM/SEGA.bin"
+Snd_Sega_End:
 	finishBank
 
 ; end of 'ROM'

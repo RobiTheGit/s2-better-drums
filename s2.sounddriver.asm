@@ -473,17 +473,12 @@ zUpdateDAC:
 	ld	(zYM2612_A0),a		; Set DAC port register
 
 	ld	a,(zCurDAC)		; Get currently playing DAC sound
-	and	7Fh			; Strip 'queued' bit
-	add	a,zDACBanks&0FFh	; Offset into list
-	ld	(.writeme+1),a		; Store into the instruction after .writeme (self-modifying code)
-
-.writeme:
-	ld	a,(zDACBanks)		; Get DAC's bank value
-	call	zBankSwitch		; Bankswitch to the DAC data
-
-	ld	a,(zCurDAC)		; Get currently playing DAC sound
 	or	a
 	jp	m,.dacqueued		; If one is queued (80h+), go to it!
+
+	ld	a,(zCurrentDACBank)			; Get current DAC bank
+	call	zBankSwitch		; Bankswitch to the DAC data
+
 	exx				; Otherwise restore registers from mirror regs
 	ld	b,1			; b=1 (initial feed to the DAC "djnz" loops, i.e. UPDATE RIGHT AWAY)
 	pop	af
@@ -492,13 +487,22 @@ zUpdateDAC:
 
 .dacqueued:
 	; If you get here, it's time to start a new DAC sound...
+	ld	hl,zCurDAC			; Get address of 'current DAC sound' value
+	res	7,(hl)				; Subtract 80h (first DAC index is 80h)
+	ld	a,(hl)				; Get current DAC sound value
+	add	a,zDACBanks&0FFh			; Offset into list
+	ld	(.writeme+1),a				; Store into the instruction after .writeme (self-modifying code)
+
+.writeme:
+	ld	a,(zDACBanks)				; Get DAC's bank value
+	ld	(zCurrentDACBank),a
+	call	zBankSwitch
+
 	ld	a,80h
 	ex	af,af'	;'
-	ld	hl,zCurDAC		; Get address of 'current DAC sound' value
-	res	7,(hl)			; Subtract 80h (first DAC index is 80h)
-	ld	a,(hl)			; Get current DAC sound value
 	; The following two instructions are dangerous: they discard the upper
 	; two bits of zCurDAC, meaning you can only have 40h DAC samples.
+	ld	a,(zCurDAC)				; Get currently playing DAC sound
 	add	a,a
 	add	a,a			; a *= 4 (each DAC entry is a pointer and length, 2+2)
 	add	a,zDACPtrTbl&0FFh	; Get low byte into table -> 'a'
@@ -658,12 +662,23 @@ zWriteToDAC:
 	di				; 4	; disable interrupts (while updating DAC)
 	ld	b,c			; 4	; reload 'b' with wait value
 	dec	de			; 6	; One less byte
-	nop				; 4
-	nop				; 4
 	ei				; 4	; enable interrupts (done updating DAC, busy waiting for next update)
-	jr	zWaitLoop		; 12	; Back to the wait loop; if there's more DAC to write, we come back down again!
-					; 90
-	; 90 cycles for two samples. zDACMasterPlaylist should use 90
+
+	bit	7,h			; 8	; has bank boundary been crossed?
+	jp	nz,zWaitLoop		; 10	; if not, branch
+	ld	h,80h			; 7	; correct address so it points to start of bank
+	di				; 4
+	push	hl			; 11
+	ld	hl,zCurrentDACBank	; 10
+	inc	(hl)			; 11	; set zCurrentDACBank to the next bank, since the boundary's been crossed
+	ld	a,(hl)			; 7
+	call	zBankSwitch		; 17	; bankswitch to this new bank
+	pop	hl			; 10
+	ei				; 4
+
+	jp	zWaitLoop		; 12	; Back to the wait loop; if there's more DAC to write, we come back down again!
+					; 183
+	; 183 cycles for two samples. zDACMasterPlaylist should use 183
 	; divided by 2 as the second parameter to pcmLoopCounter.
 
 ; ---------------------------------------------------------------------------
@@ -3729,28 +3744,28 @@ ptrsize :=	2+2
 idstart :=	80h
 
 dac_sample_metadata macro label,sampleRate
-	db	id(label),pcmLoopCounter(sampleRate,90/2)	; See zWriteToDAC for an explanation of this magic number.
+	db	id(label),pcmLoopCounter(sampleRate,183/2)	; See zWriteToDAC for an explanation of this magic number.
     endm
 
-	dac_sample_metadata zDACPtr_Kick,   40000	; 81h
-	dac_sample_metadata zDACPtr_Snare,  40000	; 82h
-	dac_sample_metadata zDACPtr_Clap,   27000	; 83h
-	dac_sample_metadata zDACPtr_Scratch,15000	; 84h
+	dac_sample_metadata zDACPtr_Kick,   28000	; 81h
+	dac_sample_metadata zDACPtr_Snare,  28000	; 82h
+	dac_sample_metadata zDACPtr_Clap,   24945	; 83h
+	dac_sample_metadata zDACPtr_Scratch,12945	; 84h
 	dac_sample_metadata zDACPtr_Timpani,17500	; 85h
-	dac_sample_metadata zDACPtr_Toms,   14000	; 86h
+	dac_sample_metadata zDACPtr_Toms,    8000	; 86h
 	dac_sample_metadata zDACPtr_Bongos,  7500	; 87h
 	dac_sample_metadata zDACPtr_Timpani,19750	; 88h
 	dac_sample_metadata zDACPtr_Timpani,18750	; 89h
 	dac_sample_metadata zDACPtr_Timpani,17250	; 8Ah
 	dac_sample_metadata zDACPtr_Timpani,17000	; 8Bh
-	dac_sample_metadata zDACPtr_Toms,   23000	; 8Ch
-	dac_sample_metadata zDACPtr_Toms,   18000	; 8Dh
-	dac_sample_metadata zDACPtr_Toms,   15000	; 8Eh
+	dac_sample_metadata zDACPtr_Toms,   20000	; 8Ch
+	dac_sample_metadata zDACPtr_Toms,   15000	; 8Dh
+	dac_sample_metadata zDACPtr_Toms,   12000	; 8Eh
 	dac_sample_metadata zDACPtr_Bongos, 15000	; 8Fh
 	dac_sample_metadata zDACPtr_Bongos, 13000	; 90h
 	dac_sample_metadata zDACPtr_Bongos,  9750	; 91h
-	dac_sample_metadata zDACPtr_Crash,  44000	; 92h
-	dac_sample_metadata zDACPtr_Ride,   44000	; 93h
+	dac_sample_metadata zDACPtr_Crash,  28000	; 92h
+	dac_sample_metadata zDACPtr_Ride,   28000	; 93h
 
 	ensure1byteoffset 9
 zDACBanks:
@@ -3925,6 +3940,7 @@ zDecEnd:
 
 zPALUpdTick:	db 0 ; zbyte_12FE ; This counts from 0 to 5 to periodically "double update" for PAL systems (basically every 6 frames you need to update twice to keep up)
 zCurDAC:	db 0 ; zbyte_12FF ; seems to indicate DAC sample playing status
+zCurrentDACBank:db 0
 zCurSong:	db 0 ; zbyte_1300 ; currently playing song index
 zDoSFXFlag:	db 0 ; zbyte_1301 ; flag to indicate we're updating SFX (and thus use custom voice table); set to FFh while doing SFX, 0 when not.
 zRingSpeaker:	db 0 ; zbyte_1302 ; stereo alternation flag. 0 = next one plays on left, -1 = next one plays on right
