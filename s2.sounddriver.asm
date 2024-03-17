@@ -485,6 +485,9 @@ zUpdateEverything:
 	; sound to be played.  This is called after updating the DAC track.
 	; Otherwise it just mucks with the timing loop, forcing an update.
 zUpdateDAC:
+	ld	a,2Ah			; DAC port
+	ld	(zYM2612_A0),a		; Set DAC port register
+
 	bankswitch SndDAC_Start		; Bankswitch to the DAC data
 
 	ld	a,(zCurDAC)		; Get currently playing DAC sound
@@ -620,7 +623,6 @@ zStartDAC:
 	im	1	; set interrupt mode 1
 	call	zClearTrackPlaybackMem
 	ei		; enable interrupts
-	ld	iy,zDACDecodeTbl
 	ld	de,0
 	; This controls the update rate for the DAC...
 	; My speculation for the rate at which the DAC updates:
@@ -642,7 +644,7 @@ zStartDAC:
 zWaitLoop:
 	ld	a,d
 	or	e
-	jr	z,zWaitLoop	; As long as 'de' (length of sample) = 0, wait...
+	jp	z,zWaitLoop	; As long as 'de' (length of sample) = 0, wait...
 
 	; 'hl' is the pointer to the sample, 'de' is the length of the sample,
 	; and 'iy' points to the translation table; let's go...
@@ -650,84 +652,30 @@ zWaitLoop:
 	; The "djnz $" loops control the playback rate of the DAC
 	; (the higher the 'b' value, the slower it will play)
 
-
-	; As for the actual encoding of the data, it is described by jman2050:
-
-	; "As for how the data is compressed, lemme explain that real quick:
-	; First, it is a lossy compression. So if you recompress a PCM sample this way,
-	; you will lose precision in data. Anyway, what happens is that each compressed data
-	; is separated into nybbles (1 4-bit section of a byte). This first nybble of data is
-	; read, and used as an index to a table containing the following data:
-	; 0,1,2,4,8,$10,$20,$40,$80,$FF,$FE,$FC,$F8,$F0,$E0,$C0."   [zDACDecodeTbl / zbyte_1B3]
-	; "So if the nybble were equal to F, it'd extract $C0 from the table. If it were 8,
-	; it would extract $80 from the table. ... Anyway, there is also another byte of data
-	; that we'll call 'd'. At the start of decompression, d is $80. What happens is that d
-	; is then added to the data extracted from the table using the nybble. So if the nybble
-	; were 4, the 8 would be extracted from the table, then added to d, which is $80,
-	; resulting in $88. This result is then put back into d, then fed into the YM2612 for
-	; processing. Then the next nybble is read, the data is extracted from the table, then
-	; is added to d (remember, d is now changed because of the previous operation), then is
-	; put back into d, then is fed into the YM2612. This process is repeated until the number
-	; of bytes as defined in the table above are read and decompressed."
-
-	; In our case, the so-called 'd' value is shadow register 'a'
-
 zWriteToDAC:
 	djnz	$			; 8	; Busy wait for specific amount of time in 'b'
 
 	di				; 4	; disable interrupts (while updating DAC)
-	ld	a,2Ah			; 7	; DAC port
-	ld	(zYM2612_A0),a		; 13	; Set DAC port register
 	ld	a,(hl)			; 7	; Get next DAC byte
 	ld	(zYM2612_D0),a		; 13	; Send to DAC
 	inc	hl			; 6
-	rlca				; 4
-	rlca				; 4
-	rlca				; 4
-	rlca				; 4
-	and	0Fh			; 7	; UPPER 4-bit offset into zDACDecodeTbl
-	ld	(.highnybble+2),a	; 13	; store into the instruction after .highnybble (self-modifying code)
-	ex	af,af'			; 4	; shadow register 'a' is the 'd' value for 'jman2050' encoding
-
-; zloc_18B
-.highnybble:
-	add	a,(iy+0)		; 19	; Get byte from zDACDecodeTbl (self-modified to proper index)
-	ld	(zYM2612_D0),a		; 13	; Write this byte to the DAC
-	ex	af,af'			; 4	; back to regular registers
 	ld	b,c			; 4	; reload 'b' with wait value
 	ei				; 4	; enable interrupts (done updating DAC, busy waiting for next update)
 
 	djnz	$			; 8	; Busy wait for specific amount of time in 'b'
 
 	di				; 4	; disable interrupts (while updating DAC)
-	push	af			; 11
-	pop	af			; 11
-	ld	a,2Ah			; 7	; DAC port
-	ld	(zYM2612_A0),a		; 13	; Set DAC port register
 	ld	b,c			; 4	; reload 'b' with wait value
 	dec	de			; 6	; One less byte
-	and	0Fh			; 7	; LOWER 4-bit offset into zDACDecodeTbl
-	ld	(.lownybble+2),a	; 13	; store into the instruction after .lownybble (self-modifying code)
-	ex	af,af'			; 4	; shadow register 'a' is the 'd' value for 'jman2050' encoding
-
-; zloc_1A8
-.lownybble:
-	ld	a,(hl)			; 7	; Get byte from zDACDecodeTbl (self-modified to proper index)
-	ld	(zYM2612_D0),a		; 13	; Write this byte to the DAC
-	ex	af,af'			; 4	; back to regular registers
+	nop				; 4
+	nop				; 4
 	ei				; 4	; enable interrupts (done updating DAC, busy waiting for next update)
-	jp	zWaitLoop		; 10	; Back to the wait loop; if there's more DAC to write, we come back down again!
-					; 268
-	; 268 cycles for two samples. zDACMasterPlaylist should use 268
+	jr	zWaitLoop		; 12	; Back to the wait loop; if there's more DAC to write, we come back down again!
+					; 90
+	; 90 cycles for two samples. zDACMasterPlaylist should use 90
 	; divided by 2 as the second parameter to pcmLoopCounter.
 
 ; ---------------------------------------------------------------------------
-; 'jman2050' DAC decode lookup table
-; zbyte_1B3
-zDACDecodeTbl:
-	db	 0,   0,  0,  0,  0, 0, 0, 0
-	db	 0,   0,  0,  0,  0, 0, 0, 0
-
 	; The following two tables are used for when an SFX terminates
 	; its track to properly restore the music track it temporarily took
 	; over.  Note that an important rule here is that no SFX may use
@@ -3798,11 +3746,11 @@ ptrsize :=	2+2
 idstart :=	81h
 
 dac_sample_metadata macro label,sampleRate
-	db	id(label),pcmLoopCounter(sampleRate,268/2)	; See zWriteToDAC for an explanation of this magic number.
+	db	id(label),pcmLoopCounter(sampleRate,90/2)	; See zWriteToDAC for an explanation of this magic number.
     endm
 
-	dac_sample_metadata zDACPtr_Kick,   28250	; 81h
-	dac_sample_metadata zDACPtr_Snare,  28250	; 82h
+	dac_sample_metadata zDACPtr_Kick,   40000	; 81h
+	dac_sample_metadata zDACPtr_Snare,  40000	; 82h
 	dac_sample_metadata zDACPtr_Clap,   27000	; 83h
 	dac_sample_metadata zDACPtr_Scratch,15000	; 84h
 	dac_sample_metadata zDACPtr_Timpani,17500	; 85h

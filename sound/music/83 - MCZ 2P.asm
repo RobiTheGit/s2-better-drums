@@ -242,8 +242,8 @@ MCZ_2p_DAC:
 	dc.b	nRst, $18
 
 MCZ_2p_Jump00:
-	dc.b	dKick, $0C, dClap, $06, dClap, dSnare, $0C, dClap, $06, dClap, dKick, $0C
-	dc.b	dClap, $06, dClap, dSnare, $0C, dClap, $06, dClap
+	dc.b	dMidTom, $0C, $06, dLowTom, dSnare, $0C, dLowTom, $06, dFloorTom, dFloorTom, $0C, $06
+	dc.b	dFloorTom, dSnare, $0C, dMidTom, $06, dFloorTom
 	smpsJump            MCZ_2p_Jump00
 
 MCZ_2p_Voices:
