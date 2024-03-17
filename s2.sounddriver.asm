@@ -3790,23 +3790,24 @@ idstart :=	81h
 
 	db	id(zDACPtr_Kick),1		; 81h
 	db	id(zDACPtr_Snare),1		; 82h
-	db	id(zDACPtr_Clap),3/2		; 83h
-	db	id(zDACPtr_Scratch),4/2		; 84h
-	db	id(zDACPtr_Timpani),0Dh/2		; 85h
-	db	id(zDACPtr_Toms),5/2		; 86h
-	db	id(zDACPtr_Bongos),0Dh/2		; 87h
-	db	id(zDACPtr_Timpani),9/2		; 88h
-	db	id(zDACPtr_Timpani),5/2		; 89h
-	db	id(zDACPtr_Timpani),0Eh/2		; 8Ah
-	db	id(zDACPtr_Timpani),0Fh/2		; 8Bh
+	db	id(zDACPtr_Clap),1		; 83h
+	db	id(zDACPtr_Scratch),2		; 84h
+	db	id(zDACPtr_Timpani),6		; 85h
+	db	id(zDACPtr_Toms),2		; 86h
+	db	id(zDACPtr_Bongos),6		; 87h
+	db	id(zDACPtr_Timpani),2		; 88h
+	db	id(zDACPtr_Timpani),4		; 89h
+	db	id(zDACPtr_Timpani),7		; 8Ah
+	db	id(zDACPtr_Timpani),8		; 8Bh
 	db	id(zDACPtr_Toms),1		; 8Ch
-	db	id(zDACPtr_Toms),2/2		; 8Dh
-	db	id(zDACPtr_Toms),4/2		; 8Eh
-	db	id(zDACPtr_Bongos),4/2		; 8Fh
-	db	id(zDACPtr_Bongos),5/2		; 90h
-	db	id(zDACPtr_Bongos),9/2		; 91h
-	db	id(zDACPtr_Crash),7/2		; 92h
-	db	id(zDACPtr_Ride),7/2		; 93h
+	db	id(zDACPtr_Toms),2		; 8Dh
+	db	id(zDACPtr_Toms),4		; 8Eh
+	db	id(zDACPtr_Bongos),2		; 8Fh
+	db	id(zDACPtr_Bongos),3		; 90h
+	db	id(zDACPtr_Bongos),4		; 91h
+	db	id(zDACPtr_Crash),3		; 92h
+	db	id(zDACPtr_Ride),3		; 93h
+
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; zsub_1271
