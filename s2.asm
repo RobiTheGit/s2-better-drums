@@ -92009,8 +92009,23 @@ SndDAC_Ride:	DAC 93 - RideCymbal
 ; ---------------------------------------------------------------------------
 ; loc_F0000:
 MusicPoint1:	startBank
-Mus_Continue:   BINCLUDE	"sound/music/compressed/9C - Continue.bin"
+Mus_Continue:   include	"sound/music/9C - Continue.asm"
 
+Mus_Drowning:	include		"sound/music/9F - Drowning.asm"
+Mus_Invincible:	include		"sound/music/97 - Invincible.asm"
+Mus_Options:	include		"sound/music/91 - Options.asm"
+Mus_Ending:	include		"sound/music/95 - Ending.asm"
+Mus_EndBoss:	include		"sound/music/94 - Final Boss.asm"
+Mus_Boss:	include		"sound/music/93 - Boss.asm"
+Mus_2PResult:	include		"sound/music/81 - 2 Player Menu.asm"
+Mus_SuperSonic:	include		"sound/music/96 - Super Sonic.asm"
+Mus_Title:	include		"sound/music/99 - Title Screen.asm"
+Mus_EndLevel:	include		"sound/music/9A - End of Act.asm"
+
+Mus_ExtraLife:	include		"sound/music/98 - Extra Life.asm"
+Mus_GameOver:	include		"sound/music/9B - Game Over.asm"
+Mus_Emerald:	include		"sound/music/9D - Got Emerald.asm"
+Mus_Credits:	include		"sound/music/9E - Credits.asm"
 	finishBank
 
 	align $20
@@ -92152,37 +92167,24 @@ ArtNem_MCZGateLog:	BINCLUDE	"art/nemesis/Drawbridge logs from MCZ.bin"
 ; loc_F8000:
 MusicPoint2:	startBank
 ; loc_F803C:
-Mus_HPZ:	BINCLUDE	"sound/music/compressed/90 - HPZ.bin"
-Mus_Drowning:	BINCLUDE	"sound/music/compressed/9F - Drowning.bin"
-Mus_Invincible:	BINCLUDE	"sound/music/compressed/97 - Invincible.bin"
-Mus_CNZ_2P:	BINCLUDE	"sound/music/compressed/88 - CNZ 2P.bin"
-Mus_EHZ:	BINCLUDE	"sound/music/compressed/82 - EHZ.bin"
-Mus_MTZ:	BINCLUDE	"sound/music/compressed/85 - MTZ.bin"
-Mus_CNZ:	BINCLUDE	"sound/music/compressed/89 - CNZ.bin"
-Mus_MCZ:	BINCLUDE	"sound/music/compressed/8B - MCZ.bin"
-Mus_MCZ_2P:	BINCLUDE	"sound/music/compressed/83 - MCZ 2P.bin"
-Mus_ARZ:	BINCLUDE	"sound/music/compressed/87 - ARZ.bin"
-Mus_DEZ:	BINCLUDE	"sound/music/compressed/8A - DEZ.bin"
-Mus_SpecStage:	BINCLUDE	"sound/music/compressed/92 - Special Stage.bin"
-Mus_Options:	BINCLUDE	"sound/music/compressed/91 - Options.bin"
-Mus_Ending:	BINCLUDE	"sound/music/compressed/95 - Ending.bin"
-Mus_EndBoss:	BINCLUDE	"sound/music/compressed/94 - Final Boss.bin"
-Mus_CPZ:	BINCLUDE	"sound/music/compressed/8E - CPZ.bin"
-Mus_Boss:	BINCLUDE	"sound/music/compressed/93 - Boss.bin"
-Mus_SCZ:	BINCLUDE	"sound/music/compressed/8D - SCZ.bin"
-Mus_OOZ:	BINCLUDE	"sound/music/compressed/84 - OOZ.bin"
-Mus_WFZ:	BINCLUDE	"sound/music/compressed/8F - WFZ.bin"
-Mus_EHZ_2P:	BINCLUDE	"sound/music/compressed/8C - EHZ 2P.bin"
-Mus_2PResult:	BINCLUDE	"sound/music/compressed/81 - 2 Player Menu.bin"
-Mus_SuperSonic:	BINCLUDE	"sound/music/compressed/96 - Super Sonic.bin"
-Mus_HTZ:	BINCLUDE	"sound/music/compressed/86 - HTZ.bin"
-Mus_Title:	BINCLUDE	"sound/music/compressed/99 - Title Screen.bin"
-Mus_EndLevel:	BINCLUDE	"sound/music/compressed/9A - End of Act.bin"
+Mus_HPZ:	include		"sound/music/90 - HPZ.asm"
+Mus_CNZ_2P:	include		"sound/music/88 - CNZ 2P.asm"
+Mus_EHZ:	include		"sound/music/82 - EHZ.asm"
+Mus_MTZ:	include		"sound/music/85 - MTZ.asm"
+Mus_CNZ:	include		"sound/music/89 - CNZ.asm"
+Mus_MCZ:	include		"sound/music/8B - MCZ.asm"
+Mus_MCZ_2P:	include		"sound/music/83 - MCZ 2P.asm"
+Mus_ARZ:	include		"sound/music/87 - ARZ.asm"
+Mus_DEZ:	include		"sound/music/8A - DEZ.asm"
+Mus_SpecStage:	include		"sound/music/92 - Special Stage.asm"
+Mus_CPZ:	include		"sound/music/8E - CPZ.asm"
 
-Mus_ExtraLife:	include		"sound/music/98 - Extra Life.asm"
-Mus_GameOver:	include		"sound/music/9B - Game Over.asm"
-Mus_Emerald:	include		"sound/music/9D - Got Emerald.asm"
-Mus_Credits:	include		"sound/music/9E - Credits.asm"
+Mus_SCZ:	include		"sound/music/8D - SCZ.asm"
+Mus_OOZ:	include		"sound/music/84 - OOZ.asm"
+Mus_WFZ:	include		"sound/music/8F - WFZ.asm"
+Mus_EHZ_2P:	include		"sound/music/8C - EHZ 2P.asm"
+Mus_HTZ:	include		"sound/music/86 - HTZ.asm"
+
 		finishBank
 
 ; ------------------------------------------------------------------------------------------
