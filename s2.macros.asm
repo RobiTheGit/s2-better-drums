@@ -111,7 +111,7 @@ soundBankStart := __LABEL__
 soundBankName := "__LABEL__"
     endm
 
-DebugSoundbanks := 0
+DebugSoundbanks := 1
 finishBank macro
 	if * > soundBankStart + $8000
 		fatal "soundBank \{soundBankName} must fit in $8000 bytes but was $\{*-soundBankStart}. Try moving something to the other bank."
