@@ -517,10 +517,6 @@ Vint_Lag:
 	cmpi.b	#GameModeID_Level,(Game_Mode).w	; Zone play mode?
 	beq.s	loc_4C4
 
-	stopZ80			; stop the Z80
-	bsr.w	sndDriverInput	; give input to the sound driver
-	startZ80		; start the Z80
-
 	bra.s	VintRet
 ; ---------------------------------------------------------------------------
 
@@ -552,7 +548,6 @@ loc_526:
 loc_54A:
 	move.w	(Hint_counter_reserve).w,(a5)
 	move.w	#$8200|(VRAM_Plane_A_Name_Table/$400),(VDP_control_port).l	; Set scroll A PNT base to $C000
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -576,7 +571,6 @@ Vint0_noWater:
 
 	stopZ80
 	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
-	bsr.w	sndDriverInput
 	startZ80
 
 	bra.w	VintRet
@@ -690,7 +684,6 @@ loc_748:
 	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -730,7 +723,6 @@ Vint_Pause_specialStage:
 	stopZ80
 
 	bsr.w	ReadJoypads
-	jsr	(sndDriverInput).l
 	tst.b	(SS_Last_Alternate_HorizScroll_Buf).w
 	beq.s	loc_84A
 
@@ -808,7 +800,6 @@ SS_PNTA_Transfer_Table:	offsetTable
 	eori.b	#1,(SS_Alternate_PNT).w			; Toggle flag
 +
 	bsr.w	ProcessDMAQueue
-	jsr	(sndDriverInput).l
 
 	startZ80
 
@@ -935,7 +926,6 @@ loc_BD6:
 
 	bsr.w	ProcessDMAQueue
 	jsr	(DrawLevelTitleCard).l
-	jsr	(sndDriverInput).l
 
 	startZ80
 
@@ -971,7 +961,6 @@ Vint_Ending:
 	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
-	bsr.w	sndDriverInput
 	movem.l	(Camera_RAM).w,d0-d7
 	movem.l	d0-d7,(Camera_RAM_copy).w
 	movem.l	(Scroll_flags).w,d0-d3
@@ -1022,7 +1011,6 @@ Vint_Menu:
 	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -1053,8 +1041,6 @@ loc_EDA:
 loc_EFE:
 	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
-
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -1129,73 +1115,6 @@ loc_1072:
 	bsr.w	Do_Updates
 	movem.l	(sp)+,d0-a6
 	rte
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; Input our music/sound selection to the sound driver.
-
-sndDriverInput:
-	lea	(Sound_Queue&$00FFFFFF).l,a0
-	lea	(Z80_RAM+zAbsVar).l,a1 ; $A01B80
-
-	cmpi.b	#$80,zVar.QueueToPlay(a1)	; If this (zReadyFlag) isn't $80, the driver is processing a previous sound request.
-	bne.s	.doSFX	; So we'll wait until at least the next frame before putting anything in there.
-
-	; If there's something in the first music queue slot, then play it.
-	_move.b	SoundQueue.Music0(a0),d0
-	beq.s	.checkMusic2
-	_clr.b	SoundQueue.Music0(a0)
-	bra.s	.playMusic
-; ---------------------------------------------------------------------------
-; loc_10A4:
-.checkMusic2:
-	; If there's something in the second music queue slot, then play it.
-	move.b	SoundQueue.Music1(a0),d0
-	beq.s	.doSFX
-	clr.b	SoundQueue.Music1(a0)
-; loc_10AE:
-.playMusic:
-	; If this is 'MusID_Pause' or 'MusID_Unpause', then this isn't a real
-	; sound ID, and it shouldn't be passed to the driver. Instead, it
-	; should be used here to manually set the driver's pause flag.
-	move.b	d0,d1
-	subi.b	#MusID_Pause,d1
-	bcs.s	.isNotPauseCommand
-	addi.b	#$7F,d1
-	move.b	d1,zVar.StopMusic(a1)
-	bra.s	.doSFX
-; ---------------------------------------------------------------------------
-; loc_10C0:
-.isNotPauseCommand:
-	; Send the music's sound ID to the driver.
-	move.b	d0,zVar.QueueToPlay(a1)
-; loc_10C4:
-.doSFX:
-	; Process the SFX queue.
-    if fixBugs
-	moveq	#3-1,d1
-    else
-	; This is too high: there is only room for three bytes in the
-	; driver's queue. This causes the first byte of 'VoiceTblPtr' to be
-	; overwritten.
-	moveq	#4-1,d1
-    endif
-
-.loop:
-	; If there's no sound queued, skip this slot.
-	move.b	SoundQueue.SFX0(a0,d1.w),d0
-	beq.s	.skip
-	; If this slot in the driver's queue is occupied, skip this slot.
-	tst.b	zVar.Queue0(a1,d1.w)
-	bne.s	.skip
-	; Remove the sound from this queue, and put it in the driver's queue.
-	clr.b	SoundQueue.SFX0(a0,d1.w)
-	move.b	d0,zVar.Queue0(a1,d1.w)
-
-.skip:
-	dbf	d1,.loop
-
-	rts
-; End of function sndDriverInput
 
     if ~~removeJmpTos
 ; sub_10E0:
@@ -1387,12 +1306,15 @@ JmpTo_SoundDriverLoad ; JmpTo
 ; The original source code called this 'bgmset'.
 ; sub_135E:
 PlayMusic:
-	tst.b	(Sound_Queue.Music0).w
-	bne.s	+
-	move.b	d0,(Sound_Queue.Music0).w
+	stopZ80
+	cmpi.b	#$80,(Z80_RAM+zAbsVar.QueueToPlay).l	; If this (zReadyFlag) isn't $80, the driver is processing a previous sound request.
+	bne.s	+	; So we'll wait until at least the next frame before putting anything in there.
+	move.b	d0,(Z80_RAM+zAbsVar.Queue0).l
+	startZ80
 	rts
 +
-	move.b	d0,(Sound_Queue.Music1).w
+	move.b	d0,(Z80_RAM+zAbsVar.Queue1).l
+	startZ80
 	rts
 ; End of function PlayMusic
 
@@ -1402,8 +1324,10 @@ PlayMusic:
 ; The original source code called this 'sfxset'.
 ; sub_1370
 PlaySound:
+	stopZ80
 	; Curiously, none of these functions write to 'Sound_Queue.Queue2'...
-	move.b	d0,(Sound_Queue.SFX0).w
+	move.b	d0,(Z80_RAM+zAbsVar.Queue1).l
+	startZ80
 	rts
 ; End of function PlaySound
 
@@ -1413,7 +1337,9 @@ PlaySound:
 ; Unfortunately, the original name for this is not known.
 ; sub_1376: PlaySoundStereo:
 PlaySound2:
-	move.b	d0,(Sound_Queue.SFX1).w
+	stopZ80
+	move.b	d0,(Z80_RAM+zAbsVar.Queue2).l
+	startZ80
 	rts
 ; End of function PlaySound2
 
@@ -1424,7 +1350,7 @@ PlaySound2:
 PlaySoundLocal:
 	tst.b	render_flags(a0)
 	bpl.s	.return
-	move.b	d0,(Sound_Queue.SFX0).w
+	bra.s	PlaySound
 
 .return:
 	rts
@@ -1456,10 +1382,12 @@ PauseGame:
 	move.b	(Ctrl_1_Press).w,d0 ; is Start button pressed?
 	or.b	(Ctrl_2_Press).w,d0 ; (either player)
 	andi.b	#button_start_mask,d0
-	beq.s	Pause_DoNothing	; if not, branch
+	beq.w	Pause_DoNothing	; if not, branch
 +
 	move.w	#1,(Game_paused).w	; freeze time
-	move.b	#MusID_Pause,(Sound_Queue.Music0).w	; pause music
+	stopZ80
+	move.b	#$7F,(Z80_RAM+zAbsVar.StopMusic).l	; pause music
+	startZ80
 ; loc_13B2:
 Pause_Loop:
 	move.b	#VintID_Pause,(Vint_routine).w
@@ -1486,7 +1414,9 @@ Pause_ChkStart:
 	beq.s	Pause_Loop	; if not, branch
 ; loc_13F2:
 Pause_Resume:
-	move.b	#MusID_Unpause,(Sound_Queue.Music0).w	; unpause the music
+	stopZ80
+	move.b	#$80,(Z80_RAM+zAbsVar.StopMusic).l	; unpause the music
+	startZ80
 ; loc_13F8:
 Unpause:
 	move.w	#0,(Game_paused).w	; unpause the game
@@ -1497,7 +1427,9 @@ Pause_DoNothing:
 ; loc_1400:
 Pause_SlowMo:
 	move.w	#1,(Game_paused).w
-	move.b	#MusID_Unpause,(Sound_Queue.Music0).w
+	stopZ80
+	move.b	#$80,(Z80_RAM+zAbsVar.StopMusic).l
+	startZ80
 	rts
 ; End of function PauseGame
 
@@ -6612,7 +6544,9 @@ loc_540C:
 
 ; loc_541A:
 SpecialStage_Unpause:
-	move.b	#MusID_Unpause,(Sound_Queue.Music0).w
+	stopZ80
+	move.b	#$7F,(Z80_RAM+zAbsVar.StopMusic).l
+	startZ80
 	move.b	#VintID_Level,(Vint_routine).w
 	bra.w	WaitForVint
 
@@ -92075,8 +92009,23 @@ SndDAC_Ride:	DAC 93 - RideCymbal
 ; ---------------------------------------------------------------------------
 ; loc_F0000:
 MusicPoint1:	startBank
-Mus_Continue:   BINCLUDE	"sound/music/compressed/9C - Continue.bin"
+Mus_Continue:   include	"sound/music/9C - Continue.asm"
 
+Mus_Drowning:	include		"sound/music/9F - Drowning.asm"
+Mus_Invincible:	include		"sound/music/97 - Invincible.asm"
+Mus_Options:	include		"sound/music/91 - Options.asm"
+Mus_Ending:	include		"sound/music/95 - Ending.asm"
+Mus_EndBoss:	include		"sound/music/94 - Final Boss.asm"
+Mus_Boss:	include		"sound/music/93 - Boss.asm"
+Mus_2PResult:	include		"sound/music/81 - 2 Player Menu.asm"
+Mus_SuperSonic:	include		"sound/music/96 - Super Sonic.asm"
+Mus_Title:	include		"sound/music/99 - Title Screen.asm"
+Mus_EndLevel:	include		"sound/music/9A - End of Act.asm"
+
+Mus_ExtraLife:	include		"sound/music/98 - Extra Life.asm"
+Mus_GameOver:	include		"sound/music/9B - Game Over.asm"
+Mus_Emerald:	include		"sound/music/9D - Got Emerald.asm"
+Mus_Credits:	include		"sound/music/9E - Credits.asm"
 	finishBank
 
 	align $20
@@ -92218,37 +92167,24 @@ ArtNem_MCZGateLog:	BINCLUDE	"art/nemesis/Drawbridge logs from MCZ.bin"
 ; loc_F8000:
 MusicPoint2:	startBank
 ; loc_F803C:
-Mus_HPZ:	BINCLUDE	"sound/music/compressed/90 - HPZ.bin"
-Mus_Drowning:	BINCLUDE	"sound/music/compressed/9F - Drowning.bin"
-Mus_Invincible:	BINCLUDE	"sound/music/compressed/97 - Invincible.bin"
-Mus_CNZ_2P:	BINCLUDE	"sound/music/compressed/88 - CNZ 2P.bin"
-Mus_EHZ:	BINCLUDE	"sound/music/compressed/82 - EHZ.bin"
-Mus_MTZ:	BINCLUDE	"sound/music/compressed/85 - MTZ.bin"
-Mus_CNZ:	BINCLUDE	"sound/music/compressed/89 - CNZ.bin"
-Mus_MCZ:	BINCLUDE	"sound/music/compressed/8B - MCZ.bin"
-Mus_MCZ_2P:	BINCLUDE	"sound/music/compressed/83 - MCZ 2P.bin"
-Mus_ARZ:	BINCLUDE	"sound/music/compressed/87 - ARZ.bin"
-Mus_DEZ:	BINCLUDE	"sound/music/compressed/8A - DEZ.bin"
-Mus_SpecStage:	BINCLUDE	"sound/music/compressed/92 - Special Stage.bin"
-Mus_Options:	BINCLUDE	"sound/music/compressed/91 - Options.bin"
-Mus_Ending:	BINCLUDE	"sound/music/compressed/95 - Ending.bin"
-Mus_EndBoss:	BINCLUDE	"sound/music/compressed/94 - Final Boss.bin"
-Mus_CPZ:	BINCLUDE	"sound/music/compressed/8E - CPZ.bin"
-Mus_Boss:	BINCLUDE	"sound/music/compressed/93 - Boss.bin"
-Mus_SCZ:	BINCLUDE	"sound/music/compressed/8D - SCZ.bin"
-Mus_OOZ:	BINCLUDE	"sound/music/compressed/84 - OOZ.bin"
-Mus_WFZ:	BINCLUDE	"sound/music/compressed/8F - WFZ.bin"
-Mus_EHZ_2P:	BINCLUDE	"sound/music/compressed/8C - EHZ 2P.bin"
-Mus_2PResult:	BINCLUDE	"sound/music/compressed/81 - 2 Player Menu.bin"
-Mus_SuperSonic:	BINCLUDE	"sound/music/compressed/96 - Super Sonic.bin"
-Mus_HTZ:	BINCLUDE	"sound/music/compressed/86 - HTZ.bin"
-Mus_Title:	BINCLUDE	"sound/music/compressed/99 - Title Screen.bin"
-Mus_EndLevel:	BINCLUDE	"sound/music/compressed/9A - End of Act.bin"
+Mus_HPZ:	include		"sound/music/90 - HPZ.asm"
+Mus_CNZ_2P:	include		"sound/music/88 - CNZ 2P.asm"
+Mus_EHZ:	include		"sound/music/82 - EHZ.asm"
+Mus_MTZ:	include		"sound/music/85 - MTZ.asm"
+Mus_CNZ:	include		"sound/music/89 - CNZ.asm"
+Mus_MCZ:	include		"sound/music/8B - MCZ.asm"
+Mus_MCZ_2P:	include		"sound/music/83 - MCZ 2P.asm"
+Mus_ARZ:	include		"sound/music/87 - ARZ.asm"
+Mus_DEZ:	include		"sound/music/8A - DEZ.asm"
+Mus_SpecStage:	include		"sound/music/92 - Special Stage.asm"
+Mus_CPZ:	include		"sound/music/8E - CPZ.asm"
 
-Mus_ExtraLife:	include		"sound/music/98 - Extra Life.asm"
-Mus_GameOver:	include		"sound/music/9B - Game Over.asm"
-Mus_Emerald:	include		"sound/music/9D - Got Emerald.asm"
-Mus_Credits:	include		"sound/music/9E - Credits.asm"
+Mus_SCZ:	include		"sound/music/8D - SCZ.asm"
+Mus_OOZ:	include		"sound/music/84 - OOZ.asm"
+Mus_WFZ:	include		"sound/music/8F - WFZ.asm"
+Mus_EHZ_2P:	include		"sound/music/8C - EHZ 2P.asm"
+Mus_HTZ:	include		"sound/music/86 - HTZ.asm"
+
 		finishBank
 
 ; ------------------------------------------------------------------------------------------
